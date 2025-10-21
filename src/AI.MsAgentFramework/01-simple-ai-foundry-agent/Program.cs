@@ -1,9 +1,17 @@
-﻿using Azure.AI.Agents.Persistent;
+﻿using Microsoft.Agents.AI;
+
+using Azure.AI.Agents.Persistent;
 using Azure.AI.Projects;
 using Azure.Identity;
-using Microsoft.Agents.AI;
+
+using OpenAI;
+
 using Spectre.Console;
 
+AnsiConsole.Write(
+    new FigletText("01-simple-ai-foundry-agent")
+        .LeftJustified()
+        .Color(Color.Green));
 
 var endpoint = "https://gz-open-ai-service.services.ai.azure.com/api/projects/gz-ai-fundry-simple-project";
 var deploymentName = Environment.GetEnvironmentVariable("AZURE_OPENAI_DEPLOYMENT_NAME") ?? "gpt-4o-mini";
@@ -30,7 +38,7 @@ await foreach (var update in writer.RunStreamingAsync(story))
     AnsiConsole.Write(update.Text);
 }
 
-static async Task<AIAgent> GetOrCreateAgentAsync(PersistentAgentsClient client, string agentName, string instructions)
+async Task<AIAgent> GetOrCreateAgentAsync(PersistentAgentsClient client, string agentName, string instructions)
 {
     await foreach (var agent in client.Administration.GetAgentsAsync())
     {
@@ -38,7 +46,7 @@ static async Task<AIAgent> GetOrCreateAgentAsync(PersistentAgentsClient client, 
         return await client.GetAIAgentAsync(agent.Id);
     }
     var agentMetadata = await client.Administration.CreateAgentAsync(
-        model: "gpt-4o-mini",
+        model: deploymentName,
         name: agentName,
         instructions: instructions);
     return await client.GetAIAgentAsync(agentMetadata.Value.Id);
